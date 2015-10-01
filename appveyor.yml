@@ -2,7 +2,6 @@ version: 1.0.{build}
 install:
 - ps: >-
     Get-ChildItem -Recurse -Filter "*.*csproj" | % {
-    Write-Host $_.Name
 
     $filename = $_.Fullname
     
@@ -25,6 +24,8 @@ install:
     
     if ($touched) {
         $proj.Save("$($filename)") | Out-Null
+        Write-Host $_.Name " - Warnings are now Errors"
+
     }
     }
 build:
