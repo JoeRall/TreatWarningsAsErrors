@@ -1,10 +1,32 @@
 version: 1.0.{build}
-init:
-- ps: >-
-    Write-Host Write-Host "From the Init"
 install:
 - ps: >-
-    Write-Host "From the install"
+    Get-ChildItem -Recurse -Filter "*.*csproj" | % {
+      Write-Host $_.Name
 
+      $filename = $_.Fullname
+
+      $proj = [xml]( Get-Content $_.Fullname )
+
+      $xmlNameSpace = new-object System.Xml.XmlNamespaceManager($proj.NameTable)
+
+      $xmlNameSpace.AddNamespace("p", "http://schemas.microsoft.com/developer/msbuild/2003")
+    
+      $nodes = $proj.SelectNodes("/p:Project/p:PropertyGroup[@Condition and not (p:TreatWarningsAsErrors)]", $xmlNameSpace)
+
+      $touched = $false
+
+      $nodes | ForEach-Object -Process { 
+          $e = $proj.CreateElement("TreatWarningsAsErrors", "http://schemas.microsoft.com/developer/msbuild/2003")
+          $e.set_InnerText("true")
+          $_.AppendChild($e) | Out-Null
+          $touched = $true
+      }
+      
+      if ($touched) {
+          $proj.Save("$($filename)") | Out-Null
+      }
+    }
 build:
   verbosity: minimal
+  version: 1.0.{build}
