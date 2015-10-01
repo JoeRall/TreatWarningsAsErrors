@@ -1,6 +1,7 @@
 version: 1.0.{build}
 init:
 - ps: >-
+    Convert-Path .
     Get-ChildItem -Recurse -Filter "*.*csproj" | % {
     Write-Host $_.Name
 
