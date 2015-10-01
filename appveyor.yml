@@ -3,7 +3,7 @@ init:
 - ps: >-
     Get-ChildItem -Recurse -Filter "*.*csproj" | % {
     Write-Host $_.Name
-    
+
     $filename = $_.Fullname
     
     $proj = [xml]( Get-Content $_.Fullname )
@@ -13,9 +13,9 @@ init:
     $xmlNameSpace.AddNamespace("p", "http://schemas.microsoft.com/developer/msbuild/2003")
     
     $nodes = $proj.SelectNodes("/p:Project/p:PropertyGroup[@Condition and not (p:TreatWarningsAsErrors)]", $xmlNameSpace)
-    
+
     $touched = $false
-        
+
     $nodes | ForEach-Object -Process { 
         $e = $proj.CreateElement("TreatWarningsAsErrors", "http://schemas.microsoft.com/developer/msbuild/2003")
         $e.set_InnerText("true")
@@ -26,6 +26,6 @@ init:
     if ($touched) {
         $proj.Save("$($filename)") | Out-Null
     }
-}
+    }
 build:
   verbosity: minimal
