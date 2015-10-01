@@ -1,32 +1,31 @@
 version: 1.0.{build}
 init:
 - ps: >-
-    Convert-Path .
     Get-ChildItem -Recurse -Filter "*.*csproj" | % {
-    Write-Host $_.Name
+      Write-Host $_.Name
 
-    $filename = $_.Fullname
+      $filename = $_.Fullname
+
+      $proj = [xml]( Get-Content $_.Fullname )
+
+      $xmlNameSpace = new-object System.Xml.XmlNamespaceManager($proj.NameTable)
+
+      $xmlNameSpace.AddNamespace("p", "http://schemas.microsoft.com/developer/msbuild/2003")
     
-    $proj = [xml]( Get-Content $_.Fullname )
+      $nodes = $proj.SelectNodes("/p:Project/p:PropertyGroup[@Condition and not (p:TreatWarningsAsErrors)]", $xmlNameSpace)
 
-    $xmlNameSpace = new-object System.Xml.XmlNamespaceManager($proj.NameTable)
+      $touched = $false
 
-    $xmlNameSpace.AddNamespace("p", "http://schemas.microsoft.com/developer/msbuild/2003")
-    
-    $nodes = $proj.SelectNodes("/p:Project/p:PropertyGroup[@Condition and not (p:TreatWarningsAsErrors)]", $xmlNameSpace)
-
-    $touched = $false
-
-    $nodes | ForEach-Object -Process { 
-        $e = $proj.CreateElement("TreatWarningsAsErrors", "http://schemas.microsoft.com/developer/msbuild/2003")
-        $e.set_InnerText("true")
-        $_.AppendChild($e) | Out-Null
-        $touched = $true
-    }
-    
-    if ($touched) {
-        $proj.Save("$($filename)") | Out-Null
-    }
+      $nodes | ForEach-Object -Process { 
+          $e = $proj.CreateElement("TreatWarningsAsErrors", "http://schemas.microsoft.com/developer/msbuild/2003")
+          $e.set_InnerText("true")
+          $_.AppendChild($e) | Out-Null
+          $touched = $true
+      }
+      
+      if ($touched) {
+          $proj.Save("$($filename)") | Out-Null
+      }
     }
 build:
   verbosity: minimal
