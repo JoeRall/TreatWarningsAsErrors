@@ -5,13 +5,13 @@ install:
     Write-Host $_.Name
 
     $filename = $_.Fullname
-
+    
     $proj = [xml]( Get-Content $_.Fullname )
 
     $xmlNameSpace = new-object System.Xml.XmlNamespaceManager($proj.NameTable)
 
     $xmlNameSpace.AddNamespace("p", "http://schemas.microsoft.com/developer/msbuild/2003")
-  
+    
     $nodes = $proj.SelectNodes("/p:Project/p:PropertyGroup[@Condition and not (p:TreatWarningsAsErrors)]", $xmlNameSpace)
 
     $touched = $false
@@ -29,4 +29,3 @@ install:
     }
 build:
   verbosity: minimal
-  version: 1.0.{build}
